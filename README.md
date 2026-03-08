@@ -21,15 +21,6 @@ Visit the live app: `https://YOUR-USERNAME.github.io/green-stocks/`
 - **News Integration**: Latest news articles linked to specific stocks
 - **Persistent Storage**: All data saved locally (localStorage)
 
-## 📱 Two Versions
-
-### Mobile App (`mobile.html`)
-- Optimized for phones and tablets
-- Touch-friendly interface
-- Compact card layouts
-- 4 tabs: Discover, Watch, Portfolio, News
-- Bottom modal interactions
-
 ### Web App (`web.html`)
 - Full desktop experience
 - Wide-screen layouts
@@ -50,11 +41,8 @@ Visit the live app: `https://YOUR-USERNAME.github.io/green-stocks/`
 ```
 green-stocks/
 ├── index.html              # Landing page
-├── mobile.html             # Mobile app wrapper
-├── web.html                # Web app wrapper
-├── green-stocks-app.jsx    # Mobile React component
-├── green-stocks-web.jsx    # Web React component
 └── README.md               # This file
+└──
 ```
 
 ## 🚀 Deployment to GitHub Pages
