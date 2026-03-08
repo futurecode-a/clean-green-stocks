@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Green Stocks Platform - Sustainable investing with ESG ratings">
+    <meta name="theme-color" content="#10b981">
+    <title>Green Stocks - Web Platform</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        .loading-screen { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: linear-gradient(to bottom right, #f0fdf4, #d1fae5);
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading-screen">
+            <div style="text-align: center;">
+                <div style="font-size: 64px; margin-bottom: 20px;">🌱</div>
+                <h2 style="color: #059669; font-size: 24px; margin-bottom: 8px;">Green Stocks Platform</h2>
+                <p style="color: #6b7280;">Loading sustainable investments...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Icon components (inline SVGs)
+        const Icon = ({ d, size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {d}
+            </svg>
+        );
+        
+        const TrendingUp = (props) => <Icon {...props} d={<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>} />;
+        const TrendingDown = (props) => <Icon {...props} d={<><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></>} />;
+        const Star = (props) => <Icon {...props} d={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />;
+        const Filter = (props) => <Icon {...props} d={<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>} />;
+        const RefreshCw = (props) => <Icon {...props} d={<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>} />;
+        const Leaf = (props) => <Icon {...props} d={<><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></>} />;
+        const BarChart3 = (props) => <Icon {...props} d={<><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></>} />;
+        const DollarSign = (props) => <Icon {...props} d={<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>} />;
+        const Search = (props) => <Icon {...props} d={<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>} />;
+        const X = (props) => <Icon {...props} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+        const Activity = (props) => <Icon {...props} d={<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>} />;
+        const PieChart = (props) => <Icon {...props} d={<><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>} />;
+
+        // Mock data
+        const mockStocks = [
+          { id: 1, symbol: 'TSLA', name: 'Tesla Inc.', sector: 'Electric Vehicles', price: 248.50, change: 3.2, changePercent: 1.3, esgScore: 85, peRatio: 65.4, revenueGrowth: 18.5, marketCap: '789B', volume: '124.5M', yearHigh: 299.29, yearLow: 138.80, description: 'Leading EV manufacturer and clean energy company', sustainability: 'A-' },
+          { id: 2, symbol: 'ENPH', name: 'Enphase Energy', sector: 'Solar Energy', price: 142.30, change: -1.8, changePercent: -1.2, esgScore: 92, peRatio: 48.2, revenueGrowth: 24.3, marketCap: '19.2B', volume: '8.3M', yearHigh: 185.45, yearLow: 81.72, description: 'Microinverter-based solar energy systems', sustainability: 'A+' },
+          { id: 3, symbol: 'NEE', name: 'NextEra Energy', sector: 'Renewable Utilities', price: 78.90, change: 0.5, changePercent: 0.6, esgScore: 88, peRatio: 22.1, revenueGrowth: 12.7, marketCap: '158B', volume: '12.1M', yearHigh: 85.32, yearLow: 65.21, description: 'Largest renewable energy generator in North America', sustainability: 'A' },
+          { id: 4, symbol: 'ICLN', name: 'iShares Clean Energy ETF', sector: 'Clean Energy ETF', price: 22.45, change: 0.8, changePercent: 3.7, esgScore: 90, peRatio: null, revenueGrowth: 15.2, marketCap: '4.8B', volume: '15.2M', yearHigh: 28.90, yearLow: 18.34, description: 'Diversified clean energy ETF with global exposure', sustainability: 'A' },
+          { id: 5, symbol: 'FSLR', name: 'First Solar Inc.', sector: 'Solar Energy', price: 186.75, change: 5.2, changePercent: 2.9, esgScore: 89, peRatio: 32.5, revenueGrowth: 21.8, marketCap: '19.9B', volume: '3.8M', yearHigh: 215.60, yearLow: 136.42, description: 'Leading thin-film solar panel manufacturer', sustainability: 'A' },
+          { id: 6, symbol: 'PLUG', name: 'Plug Power Inc.', sector: 'Hydrogen Energy', price: 3.82, change: -0.12, changePercent: -3.0, esgScore: 83, peRatio: null, revenueGrowth: 28.4, marketCap: '2.3B', volume: '45.6M', yearHigh: 9.88, yearLow: 2.31, description: 'Hydrogen fuel cell solutions provider', sustainability: 'B+' },
+          { id: 7, symbol: 'VESTAS', name: 'Vestas Wind Systems', sector: 'Wind Energy', price: 24.15, change: 1.2, changePercent: 5.2, esgScore: 91, peRatio: 18.7, revenueGrowth: 14.6, marketCap: '24.8B', volume: '2.1M', yearHigh: 29.45, yearLow: 18.92, description: 'Global leader in wind turbine manufacturing', sustainability: 'A+' },
+          { id: 8, symbol: 'RUN', name: 'Sunrun Inc.', sector: 'Solar Energy', price: 12.88, change: 0.45, changePercent: 3.6, esgScore: 86, peRatio: null, revenueGrowth: 19.3, marketCap: '2.9B', volume: '11.4M', yearHigh: 19.87, yearLow: 8.42, description: 'Residential solar installation and financing', sustainability: 'A-' }
+        ];
+
+        const sectors = ['All', 'Solar Energy', 'Electric Vehicles', 'Wind Energy', 'Hydrogen Energy', 'Renewable Utilities', 'Clean Energy ETF'];
+
+        function GreenStocksWeb() {
+          const [stocks, setStocks] = useState(mockStocks);
+          const [watchlist, setWatchlist] = useState([]);
+          const [selectedSector, setSelectedSector] = useState('All');
+          const [sortBy, setSortBy] = useState('esgScore');
+          const [minESG, setMinESG] = useState(80);
+          const [searchTerm, setSearchTerm] = useState('');
+          const [selectedStock, setSelectedStock] = useState(null);
+          const [view, setView] = useState('grid');
+          const [lastUpdate, setLastUpdate] = useState(new Date());
+
+          useEffect(() => {
+            try {
+              const saved = localStorage.getItem('greenStocksWatchlist');
+              if (saved) setWatchlist(JSON.parse(saved));
+            } catch (e) { console.log('localStorage not available'); }
+          }, []);
+
+          useEffect(() => {
+            try {
+              localStorage.setItem('greenStocksWatchlist', JSON.stringify(watchlist));
+            } catch (e) { console.log('localStorage not available'); }
+          }, [watchlist]);
+
+          const filteredStocks = stocks
+            .filter(stock => selectedSector === 'All' || stock.sector === selectedSector)
+            .filter(stock => stock.esgScore >= minESG)
+            .filter(stock => searchTerm === '' || stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || stock.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a, b) => {
+              if (sortBy === 'esgScore') return b.esgScore - a.esgScore;
+              if (sortBy === 'revenueGrowth') return b.revenueGrowth - a.revenueGrowth;
+              if (sortBy === 'changePercent') return b.changePercent - a.changePercent;
+              return 0;
+            });
+
+          const watchlistStocks = stocks.filter(stock => watchlist.includes(stock.id));
+          const avgESG = watchlistStocks.length > 0 ? (watchlistStocks.reduce((sum, s) => sum + s.esgScore, 0) / watchlistStocks.length).toFixed(1) : 0;
+          
+          const toggleWatchlist = (stockId) => {
+            setWatchlist(prev => prev.includes(stockId) ? prev.filter(id => id !== stockId) : [...prev, stockId]);
+          };
+
+          const refreshPrices = () => {
+            setStocks(prev => prev.map(stock => ({
+              ...stock,
+              price: stock.price + (Math.random() - 0.5) * 2,
+              change: (Math.random() - 0.5) * 3,
+              changePercent: (Math.random() - 0.5) * 4
+            })));
+            setLastUpdate(new Date());
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+              <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-xl">
+                        <Leaf size={28} className="text-white" />
+                      </div>
+                      <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Green Stocks Platform</h1>
+                        <p className="text-sm text-gray-600">Sustainable investing for a better future</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Activity size={16} className="text-green-600" />
+                        <span>Updated: {lastUpdate.toLocaleTimeString()}</span>
+                      </div>
+                      <button onClick={refreshPrices} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <RefreshCw size={16} />
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              <div className="max-w-7xl mx-auto px-6 py-6">
+                <div className="grid grid-cols-12 gap-6">
+                  <aside className="col-span-3 space-y-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Star size={20} className="text-yellow-500" />
+                        <h2 className="font-bold text-gray-900">My Watchlist</h2>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg mb-3">
+                        <p className="text-xs text-gray-600 mb-1">Stocks Tracked</p>
+                        <p className="text-2xl font-bold text-green-600">{watchlistStocks.length}</p>
+                      </div>
+                      {watchlistStocks.length > 0 && (
+                        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 mb-1">Avg ESG Score</p>
+                          <p className="text-2xl font-bold text-blue-600">{avgESG}/100</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Filter size={20} className="text-gray-700" />
+                        <h2 className="font-bold text-gray-900">Filters</h2>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-2">SECTOR</label>
+                          <div className="space-y-1">
+                            {sectors.map(sector => (
+                              <button key={sector} onClick={() => setSelectedSector(sector)} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${selectedSector === sector ? 'bg-green-600 text-white font-medium' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                {sector}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-2">MIN ESG: {minESG}</label>
+                          <input type="range" min="70" max="100" value={minESG} onChange={(e) => setMinESG(Number(e.target.value))} className="w-full accent-green-600" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-2">SORT BY</label>
+                          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm">
+                            <option value="esgScore">ESG Score</option>
+                            <option value="revenueGrowth">Revenue Growth</option>
+                            <option value="changePercent">Price Change</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </aside>
+
+                  <main className="col-span-9">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 relative">
+                          <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input type="text" placeholder="Search stocks..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg" />
+                          {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <X size={18} className="text-gray-400" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">{filteredStocks.length} stocks</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+                      {filteredStocks.map(stock => (
+                        <div key={stock.id} onClick={() => setSelectedStock(stock)} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-lg transition-all cursor-pointer group">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-xl text-gray-900 group-hover:text-green-600">{stock.symbol}</h3>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stock.sustainability.startsWith('A') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                  {stock.sustainability}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 truncate">{stock.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{stock.sector}</p>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); toggleWatchlist(stock.id); }} className="p-2 hover:bg-gray-100 rounded-full">
+                              <Star size={20} className={watchlist.includes(stock.id) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'} />
+                            </button>
+                          </div>
+                          <div className="mb-4">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-3xl font-bold text-gray-900">${stock.price.toFixed(2)}</span>
+                              <div className={`flex items-center gap-1 text-sm font-medium ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {stock.changePercent >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                                <span>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">ESG</p>
+                              <p className="font-bold text-green-600 flex items-center gap-1">
+                                <Leaf size={14} />
+                                {stock.esgScore}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Growth</p>
+                              <p className="font-bold text-blue-600">+{stock.revenueGrowth}%</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">P/E</p>
+                              <p className="font-bold text-gray-700">{stock.peRatio || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </main>
+                </div>
+              </div>
+
+              {selectedStock && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedStock(null)}>
+                  <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-2xl">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h2 className="text-3xl font-bold mb-2">{selectedStock.symbol}</h2>
+                          <p className="text-green-100 text-lg">{selectedStock.name}</p>
+                          <p className="text-green-200 text-sm mt-1">{selectedStock.sector}</p>
+                        </div>
+                        <button onClick={() => setSelectedStock(null)} className="p-2 bg-white/20 hover:bg-white/30 rounded-full">
+                          <X size={24} />
+                        </button>
+                      </div>
+                      <div className="flex items-baseline gap-3 mt-4">
+                        <span className="text-5xl font-bold">${selectedStock.price.toFixed(2)}</span>
+                        <div className={`flex items-center gap-2 text-xl ${selectedStock.changePercent >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                          {selectedStock.changePercent >= 0 ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
+                          <span>{selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-700 mb-6">{selectedStock.description}</p>
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-green-50 p-4 rounded-xl">
+                          <p className="text-xs text-gray-600 mb-1">ESG Score</p>
+                          <p className="text-3xl font-bold text-green-600">{selectedStock.esgScore}/100</p>
+                          <p className="text-xs text-green-700 mt-1">Rating: {selectedStock.sustainability}</p>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-xl">
+                          <p className="text-xs text-gray-600 mb-1">Revenue Growth</p>
+                          <p className="text-3xl font-bold text-blue-600">+{selectedStock.revenueGrowth}%</p>
+                          <p className="text-xs text-blue-700 mt-1">Year over Year</p>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-4">
+                        <h3 className="font-bold text-gray-900 mb-3">Additional Information</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex justify-between py-2 border-b border-gray-200">
+                            <span className="text-gray-600">Market Cap</span>
+                            <span className="font-semibold">${selectedStock.marketCap}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-200">
+                            <span className="text-gray-600">P/E Ratio</span>
+                            <span className="font-semibold">{selectedStock.peRatio || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-200">
+                            <span className="text-gray-600">Volume</span>
+                            <span className="font-semibold">{selectedStock.volume}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-200">
+                            <span className="text-gray-600">52W High</span>
+                            <span className="font-semibold">${selectedStock.yearHigh}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Render
+        try {
+          const root = ReactDOM.createRoot(document.getElementById('root'));
+          root.render(<GreenStocksWeb />);
+          console.log('✅ Green Stocks Platform loaded successfully - All-in-One version');
+        } catch (error) {
+          console.error('Error:', error);
+          document.getElementById('root').innerHTML = '<div style="padding: 40px; text-align: center;"><h1 style="color: #dc2626;">Error loading app</h1><p>Please refresh the page or try a different browser.</p></div>';
+        }
+    </script>
+</body>
+</html>
